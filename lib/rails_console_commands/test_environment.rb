@@ -24,7 +24,9 @@ module RailsConsoleCommands
       def reload_classes
         # Overwrite the default config.cache_classes = true,
         # so we can change classes in the test session.
-        ActiveSupport::Dependencies.mechanism = :load
+        if ActiveSupport::Dependencies.respond_to?(:mechanism=) # Rails < 7
+          ActiveSupport::Dependencies.mechanism = :load
+        end
 
         Rails.application.reloader.reload!
         Rails.application.reloader.prepare!
