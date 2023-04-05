@@ -8,7 +8,7 @@ module RailsConsoleCommands
       def fork
         Environment.fork do
           setup_for_test
-          yield
+          disable_reloading { yield }
         end
 
         reset_active_record
@@ -21,9 +21,19 @@ module RailsConsoleCommands
         add_test_dir_to_load_path
       end
 
+      # Code should not be reloaded while tests are running, as this tends
+      # to cause Active Record connection errors, and causes unreliable test runs.
+      # `reload_classes` will ensure that the code is reloaded before tests commence.
+      def disable_reloading
+        was = Rails.application.reloader.check
+        Rails.application.reloader.check = lambda { false }
+
+        yield
+      ensure
+        Rails.application.reloader.check = was
+      end
+
       def reload_classes
-        # Overwrite the default config.cache_classes = true,
-        # so we can change classes in the test session.
         if ActiveSupport::Dependencies.respond_to?(:mechanism=) # Rails < 7
           ActiveSupport::Dependencies.mechanism = :load
         end
