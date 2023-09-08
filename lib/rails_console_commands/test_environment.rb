@@ -34,18 +34,12 @@ module RailsConsoleCommands
       end
 
       def reload_classes
-        if ActiveSupport::Dependencies.respond_to?(:mechanism=) # Rails < 7
-          ActiveSupport::Dependencies.mechanism = :load
-        end
-
         Rails.application.reloader.reload!
         Rails.application.reloader.prepare!
       end
 
       def reset_active_record
-        return unless defined? ApplicationRecord
-        ApplicationRecord.clear_active_connections!
-        ApplicationRecord.establish_connection
+        ActiveRecord::Base.connection_handler.clear_active_connections!(:all)
       end
 
       def add_test_dir_to_load_path
